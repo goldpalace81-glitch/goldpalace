@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>قصر الذهب — تسجيل الدخول</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 340px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    .logo { font-size: 48px; margin-bottom: 8px; }
+    h1 { color: #d4af37; font-size: 24px; margin-bottom: 4px; }
+    p.sub { color: #aaa; font-size: 13px; margin-bottom: 28px; }
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(212,175,55,0.4);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      padding: 13px 16px;
+      margin-bottom: 16px;
+      text-align: center;
+      letter-spacing: 3px;
+      outline: none;
+      transition: border 0.3s;
+    }
+    input:focus { border-color: #d4af37; }
+    input::placeholder { color: #666; letter-spacing: 0; font-size: 14px; }
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, #d4af37, #b8972e);
+      color: #1a1200;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      margin-bottom: 10px;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-outline {
+      width: 100%;
+      background: transparent;
+      border: 1px solid rgba(212,175,55,0.5);
+      color: #d4af37;
+      font-size: 14px;
+      padding: 11px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    #msg { color: #f0c040; font-size: 13px; margin-top: 14px; min-height: 20px; }
+    .step { display: none; }
+    .step.active { display: block; }
+    #recaptcha-container { margin: 10px auto; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🏅</div>
+  <h1>قصر الذهب</h1>
+  <p class="sub">سجّل دخولك برقم جوالك</p>
+
+  <div class="step active" id="step1">
+    <input type="tel" id="phoneInput" placeholder="05xxxxxxxx" maxlength="10" />
+    <div id="recaptcha-container"></div>
+    <button class="btn" id="sendOtpBtn">إرسال رمز التحقق</button>
+  </div>
+
+  <div class="step" id="step2">
+    <p style="color:#aaa;font-size:13px;margin-bottom:14px;">أدخل الرمز المرسل لجوالك</p>
+    <input type="number" id="otpInput" placeholder="_ _ _ _ _ _" maxlength="6" />
+    <button class="btn" id="verifyBtn">تحقق والدخول</button>
+    <button class="btn-outline" id="resendBtn">إعادة الإرسال</button>
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<script type="module">
+  import { auth, db } from './firebase.js';
+  import {
+    RecaptchaVerifier,
+    signInWithPhoneNumber
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  let confirmationResult = null;
+
+  window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    size: 'invisible',
+    callback: () => {}
+  });
+
+  function showMsg(txt) { document.getElementById('msg').textContent = txt; }
+
+  document.getElementById('sendOtpBtn').addEventListener('click', async () => {
+    const raw = document.getElementById('phoneInput').value.trim();
+    if (!/^05\d{8}$/.test(raw)) {
+      showMsg('⚠️ أدخل رقم سعودي صحيح يبدأ بـ 05');
+      return;
+    }
+    const phone = '+966' + raw.slice(1);
+    document.getElementById('sendOtpBtn').disabled = true;
+    showMsg('جاري إرسال الرمز...');
+    try {
+      confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      showMsg('✅ تم إرسال الرمز');
+    } catch(e) {
+      showMsg('❌ ' + e.message);
+      document.getElementById('sendOtpBtn').disabled = false;
+    }
+  });
+
+  document.getElementById('verifyBtn').addEventListener('click', async () => {
+    const code = document.getElementById('otpInput').value.trim();
+    if (code.length !== 6) { showMsg('⚠️ الرمز 6 أرقام'); return; }
+    document.getElementById('verifyBtn').disabled = true;
+    showMsg('جاري التحقق...');
+    try {
+      const result = await confirmationResult.confirm(code);
+      const uid = result.user.uid;
+      const snap = await getDoc(doc(db, 'workers', uid));
+      if (!snap.exists()) {
+        showMsg('❌ هذا الرقم غير مسجّل');
+        await auth.signOut();
+        document.getElementById('verifyBtn').disabled = false;
+        return;
+      }
+      const data = snap.data();
+      localStorage.setItem('gp_uid', uid);
+      localStorage.setItem('gp_name', data.name);
+      localStorage.setItem('gp_role', data.role);
+      if (data.role === 'admin') {
+        window.location.href = 'supervisor.html';
+      } else {
+        window.location.href = 'worker.html';
+      }
+    } catch(e) {
+      showMsg('❌ رمز خاطئ، حاول مجدداً');
+      document.getElementById('verifyBtn').disabled = false;
+    }
+  });
+
+  document.getElementById('resendBtn').addEventListener('click', () => {
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('sendOtpBtn').disabled = false;
+    showMsg('');
+  });
+</script>
+</body>
+</html>
