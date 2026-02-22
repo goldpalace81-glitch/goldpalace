@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>قصر الذهب — العامل</title>
+  <title>قصر الذهب — المشرف</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -15,272 +16,224 @@
     }
     header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
-    header h1 { color: #d4af37; font-size: 20px; }
+    h1 { color: #d4af37; font-size: 20px; }
     .logout-btn {
-      background: transparent;
-      border: 1px solid #d4af37;
-      color: #d4af37;
-      padding: 6px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
+      background: transparent; border: 1px solid #d4af37;
+      color: #d4af37; padding: 6px 14px; border-radius: 8px;
+      cursor: pointer; font-size: 13px;
     }
-    .type-btns {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-      margin-bottom: 28px;
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      flex: 1; padding: 10px; border-radius: 10px;
+      border: 1px solid rgba(212,175,55,0.3);
+      background: rgba(255,255,255,0.04);
+      color: #ccc; font-size: 14px; cursor: pointer; text-align: center;
+      transition: all 0.2s;
     }
-    .type-btn {
-      padding: 22px 10px;
-      border-radius: 14px;
-      border: 2px solid transparent;
-      font-size: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.25s;
+    .tab.active {
+      background: rgba(212,175,55,0.2);
+      border-color: #d4af37; color: #d4af37;
     }
-    .type-btn.sell {
-      background: rgba(46,213,115,0.1);
-      border-color: rgba(46,213,115,0.4);
-      color: #2ed573;
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(2,1fr);
+      gap: 12px; margin-bottom: 20px;
     }
-    .type-btn.buy {
-      background: rgba(255,71,87,0.1);
-      border-color: rgba(255,71,87,0.4);
-      color: #ff4757;
+    .stat-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px; padding: 16px; text-align: center;
     }
-    .type-btn.selected {
-      transform: scale(1.04);
-      box-shadow: 0 0 24px rgba(212,175,55,0.4);
-      border-color: #d4af37 !important;
-      color: #d4af37 !important;
-    }
-    .form-card {
+    .stat-card .val { font-size: 18px; font-weight: bold; color: #d4af37; }
+    .stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 4px; }
+    .chart-card {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(212,175,55,0.2);
-      border-radius: 16px;
-      padding: 22px;
-      margin-bottom: 20px;
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
     }
-    .field { margin-bottom: 20px; }
-    label {
-      display: block;
-      color: #d4af37;
-      font-size: 13px;
-      margin-bottom: 8px;
-      font-weight: 600;
+    .chart-card h3 { color: #d4af37; font-size: 13px; margin-bottom: 12px; }
+    .filters {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px; padding: 18px; margin-bottom: 20px;
     }
-    select, input[type="number"], input[type="text"], textarea {
-      width: 100%;
+    .filters h3 { color: #d4af37; font-size: 14px; margin-bottom: 14px; }
+    .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .filter-grid select, .filter-grid input {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(212,175,55,0.3);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 15px;
-      padding: 12px 14px;
-      outline: none;
-      transition: border 0.3s;
-      -webkit-appearance: none;
+      border-radius: 8px; color: #fff;
+      padding: 9px 12px; font-size: 13px; width: 100%; outline: none;
     }
-    select:focus, input:focus, textarea:focus { border-color: #d4af37; }
-    option { background: #24243e; color: #fff; }
-    .karat-group { display: flex; gap: 10px; }
-    .karat-pill {
-      flex: 1;
-      padding: 11px 0;
-      border-radius: 10px;
-      border: 2px solid rgba(212,175,55,0.3);
-      background: rgba(255,255,255,0.05);
-      color: #aaa;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
+    option { background: #24243e; }
+    .filter-full { grid-column: 1 / -1; }
+    .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .date-range label { font-size: 11px; color: #aaa; margin-bottom: 4px; display: block; }
+    .reset-btn {
+      width: 100%; background: transparent;
+      border: 1px solid rgba(212,175,55,0.4);
+      color: #d4af37; padding: 9px; border-radius: 8px;
+      cursor: pointer; font-size: 13px; margin-top: 4px;
     }
-    .karat-pill.selected {
-      background: linear-gradient(135deg, #d4af37, #b8972e);
-      color: #1a1200;
-      border-color: #d4af37;
-      box-shadow: 0 0 14px rgba(212,175,55,0.5);
-    }
-    .radio-group { display: flex; gap: 10px; }
-    .radio-btn {
-      flex: 1;
-      padding: 11px;
-      border-radius: 10px;
-      border: 2px solid rgba(212,175,55,0.3);
-      background: rgba(255,255,255,0.05);
-      color: #aaa;
-      font-size: 14px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
-    }
-    .radio-btn.selected {
-      background: rgba(212,175,55,0.2);
-      border-color: #d4af37;
-      color: #d4af37;
-    }
-    .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    textarea { resize: none; min-height: 80px; }
-    .datetime-badge {
-      background: rgba(212,175,55,0.08);
-      border: 1px solid rgba(212,175,55,0.2);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #d4af37;
-      text-align: center;
-    }
-    .save-btn {
-      width: 100%;
-      background: linear-gradient(135deg, #d4af37, #b8972e);
-      color: #1a1200;
-      font-size: 17px;
-      font-weight: bold;
-      padding: 15px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: opacity 0.3s;
-    }
-    .save-btn:hover { opacity: 0.88; }
-    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: #2ed573; color: #000; padding: 12px 28px;
-      border-radius: 30px; font-weight: bold; font-size: 14px;
-      opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 999;
-    }
-    #toast.show { opacity: 1; }
-    #toast.error { background: #ff4757; color: #fff; }
-    .history-title { color: #d4af37; font-size: 16px; font-weight: bold; margin: 28px 0 14px; }
     .tx-card {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(212,175,55,0.12);
-      border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+      border-radius: 12px; padding: 14px; margin-bottom: 10px;
     }
     .tx-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
     .tx-sell { color: #2ed573; font-weight: bold; }
-    .tx-buy { color: #ff4757; font-weight: bold; }
-    .tx-detail { color: #bbb; font-size: 13px; line-height: 1.8; }
-    .tx-amount { color: #d4af37; font-weight: bold; font-size: 15px; margin-top: 4px; }
+    .tx-buy  { color: #ff4757; font-weight: bold; }
+    .tx-detail { color: #bbb; font-size: 12px; line-height: 1.8; }
+    .tx-amount { color: #d4af37; font-weight: bold; margin-top: 4px; }
+    .tx-worker { color: #a29bfe; font-size: 12px; margin-bottom: 4px; }
+    .badge {
+      background: rgba(212,175,55,0.15);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 6px; font-size: 11px;
+      padding: 2px 8px; color: #d4af37;
+    }
+    #noResults {
+      color: #888; text-align: center;
+      padding: 30px; display: none;
+    }
+    .section-title {
+      color: #d4af37; font-size: 15px;
+      font-weight: bold; margin-bottom: 14px;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div>
-    <h1>🏅 قصر الذهب</h1>
-    <span style="color:#aaa;font-size:13px;" id="workerNameHeader"></span>
+    <h1>📊 لوحة المشرف</h1>
+    <span style="color:#aaa;font-size:11px;" id="lastUpdate"></span>
   </div>
   <button class="logout-btn" id="logoutBtn">خروج</button>
 </header>
 
-<div class="type-btns">
-  <button class="type-btn sell" data-type="sell">📤 بيع</button>
-  <button class="type-btn buy"  data-type="buy">📥 شراء</button>
+<div class="tabs">
+  <div class="tab active" data-tab="overview">📈 نظرة عامة</div>
+  <div class="tab" data-tab="transactions">📋 العمليات</div>
 </div>
 
-<div class="form-card" id="mainForm" style="display:none;">
-
-  <div class="field">
-    <label>📅 التاريخ والوقت</label>
-    <div class="datetime-badge" id="datetimeDisplay"></div>
-  </div>
-
-  <div class="field" id="productField">
-    <label>💍 اسم القطعة</label>
-    <select id="product">
-      <option value="">— اختر —</option>
-      <option>سبحة</option><option>خاتم</option><option>إسوارة</option>
-      <option>طقم</option><option>نص طقم</option><option>حلق</option>
-      <option>دبلة</option><option>عقد</option><option>شوكر</option>
-      <option>خلخال</option><option>كف</option><option>حزام</option>
-    </select>
-  </div>
-
-  <div class="field">
-    <label>⚖️ العيار</label>
-    <div class="karat-group">
-      <div class="karat-pill" data-karat="18">18</div>
-      <div class="karat-pill" data-karat="21">21</div>
-      <div class="karat-pill" data-karat="18&21">18&21</div>
+<!-- نظرة عامة -->
+<div id="tab-overview">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="val" id="st-sell">—</div>
+      <div class="lbl">💚 إجمالي البيع (﷼)</div>
     </div>
-    <input type="hidden" id="karatVal"/>
-  </div>
-
-  <div class="field" id="goldTypeField" style="display:none;">
-    <label>🔸 نوع الذهب <span style="color:#ff4757;font-size:11px;">(مطلوب)</span></label>
-    <div class="radio-group">
-      <div class="radio-btn" data-gtype="ذهب صافٍ">ذهب صافٍ</div>
-      <div class="radio-btn" data-gtype="ذهب بفصوص">بفصوص</div>
+    <div class="stat-card">
+      <div class="val" id="st-buy">—</div>
+      <div class="lbl">❤️ إجمالي الشراء (﷼)</div>
     </div>
-    <input type="hidden" id="goldTypeVal"/>
-  </div>
-
-  <div class="field">
-    <label>⚖️ الوزن (جرام)</label>
-    <input type="number" id="weight" placeholder="0.00" step="0.01" min="0"/>
-  </div>
-
-  <div class="field">
-    <label>💳 طريقة الدفع</label>
-    <select id="payMethod">
-      <option value="">— اختر —</option>
-    </select>
-  </div>
-
-  <div class="field" id="amountField">
-    <label>💰 المبلغ (﷼)</label>
-    <input type="number" id="amount" placeholder="0" min="0"/>
-  </div>
-
-  <div class="half-grid" id="halfFields" style="display:none;">
-    <div>
-      <label>💵 نقدي (﷼)</label>
-      <input type="number" id="amountCash" placeholder="0" min="0"/>
+    <div class="stat-card">
+      <div class="val" id="st-net">—</div>
+      <div class="lbl">⚖️ الصافي (﷼)</div>
     </div>
-    <div>
-      <label>💳 كارت (﷼)</label>
-      <input type="number" id="amountCard" placeholder="0" min="0"/>
+    <div class="stat-card">
+      <div class="val" id="st-weight">—</div>
+      <div class="lbl">⚖️ إجمالي الوزن (جم)</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="st-count">—</div>
+      <div class="lbl">🔢 عدد العمليات</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="st-workers">—</div>
+      <div class="lbl">👥 العمال النشطين</div>
     </div>
   </div>
 
-  <div class="field">
-    <label>📝 ملاحظة <span style="color:#888;font-size:11px;">(اختياري)</span></label>
-    <textarea id="notes" placeholder="أي ملاحظة إضافية..."></textarea>
+  <div class="chart-card">
+    <h3>📊 البيع والشراء (آخر 14 يوم)</h3>
+    <canvas id="chartDaily" height="200"></canvas>
   </div>
-
-  <button class="save-btn" id="saveBtn">✅ حفظ العملية</button>
+  <div class="chart-card">
+    <h3>💳 توزيع طرق الدفع</h3>
+    <canvas id="chartPay" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>🥇 توزيع العيارات</h3>
+    <canvas id="chartKarat" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>👥 إجمالي كل عامل (﷼)</h3>
+    <canvas id="chartWorker" height="200"></canvas>
+  </div>
 </div>
 
-<div id="historySection" style="display:none;">
-  <div class="history-title">📋 عمليات اليوم</div>
-  <div id="historyList"></div>
-</div>
+<!-- العمليات -->
+<div id="tab-transactions" style="display:none;">
+  <div class="filters">
+    <h3>🔍 فلترة</h3>
+    <div class="filter-grid">
+      <select id="f-worker"><option value="">كل العمال</option></select>
+      <select id="f-type">
+        <option value="">بيع وشراء</option>
+        <option value="sell">بيع فقط</option>
+        <option value="buy">شراء فقط</option>
+      </select>
+      <select id="f-karat">
+        <option value="">كل العيارات</option>
+        <option>18</option><option>21</option><option>18&21</option>
+      </select>
+      <select id="f-product">
+        <option value="">كل القطع</option>
+        <option>سبحة</option><option>خاتم</option><option>إسوارة</option>
+        <option>طقم</option><option>نص طقم</option><option>حلق</option>
+        <option>دبلة</option><option>عقد</option><option>شوكر</option>
+        <option>خلخال</option><option>كف</option><option>حزام</option>
+      </select>
+      <select id="f-pay">
+        <option value="">كل طرق الدفع</option>
+        <option>كاش</option><option>تحويل</option><option>بطاقة</option>
+        <option>تابي</option><option>نص كاش نص كارت</option>
+      </select>
+      <div></div>
+      <div class="filter-full">
+        <div class="date-range">
+          <div>
+            <label>من</label>
+            <input type="date" id="f-from"/>
+          </div>
+          <div>
+            <label>إلى</label>
+            <input type="date" id="f-to"/>
+          </div>
+        </div>
+      </div>
+      <button class="reset-btn filter-full" id="resetFilters">🔄 إعادة تعيين</button>
+    </div>
+  </div>
 
-<div id="toast"></div>
+  <div class="section-title" id="txCount">العمليات</div>
+  <div id="txList"></div>
+  <div id="noResults">لا توجد عمليات بهذه الفلاتر</div>
+</div>
 
 <script type="module">
   import { auth, db } from './firebase.js';
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import {
-    collection, addDoc, query, where, orderBy,
-    onSnapshot, serverTimestamp, Timestamp
+    collection, query, orderBy, onSnapshot, doc, getDoc
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  let currentUser = null;
-  let currentType = null;
+  let allTx = [];
+  let charts = {};
 
-  onAuthStateChanged(auth, user => {
+  // Auth
+  onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = 'index.html'; return; }
-    currentUser = user;
-    document.getElementById('workerNameHeader').textContent =
-      'مرحباً، ' + (localStorage.getItem('gp_name') || '');
-    loadToday();
+    const snap = await getDoc(doc(db, 'workers', user.uid));
+    if (!snap.exists() || snap.data().role !== 'admin') {
+      alert('ليس لديك صلاحية المشرف');
+      window.location.href = 'index.html';
+      return;
+    }
+    loadAll();
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -289,180 +242,199 @@
     window.location.href = 'index.html';
   });
 
-  // ساعة
-  function tick() {
-    const now = new Date();
-    document.getElementById('datetimeDisplay').textContent =
-      now.toLocaleDateString('ar-SA-u-nu-latn', {
-        weekday:'long', year:'numeric', month:'long', day:'numeric',
-        hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Riyadh'
-      });
-  }
-  setInterval(tick, 1000); tick();
-
-  // اختيار بيع/شراء
-  document.querySelectorAll('.type-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentType = btn.dataset.type;
-      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      document.getElementById('mainForm').style.display = 'block';
-      buildForm(currentType);
+  // تبويبات
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const name = tab.dataset.tab;
+      document.getElementById('tab-overview').style.display     = name==='overview'     ? 'block' : 'none';
+      document.getElementById('tab-transactions').style.display = name==='transactions' ? 'block' : 'none';
     });
   });
 
-  function buildForm(type) {
-    const isBuy = type === 'buy';
-    document.getElementById('productField').style.display  = isBuy ? 'none'  : 'block';
-    document.getElementById('goldTypeField').style.display = isBuy ? 'block' : 'none';
-    const pm = document.getElementById('payMethod');
-    pm.innerHTML = '<option value="">— اختر —</option>';
-    const methods = isBuy
-      ? ['كاش', 'تحويل']
-      : ['كاش', 'تحويل', 'بطاقة', 'تابي', 'نص كاش نص كارت'];
-    methods.forEach(m => {
-      const o = document.createElement('option');
-      o.value = m; o.textContent = m; pm.appendChild(o);
-    });
-    refreshPayFields();
-  }
-
-  function refreshPayFields() {
-    const isHalf = document.getElementById('payMethod').value === 'نص كاش نص كارت';
-    document.getElementById('amountField').style.display = isHalf ? 'none'  : 'block';
-    document.getElementById('halfFields').style.display  = isHalf ? 'grid'  : 'none';
-  }
-  document.getElementById('payMethod').addEventListener('change', refreshPayFields);
-
-  // العيارات
-  document.querySelectorAll('.karat-pill').forEach(p => {
-    p.addEventListener('click', () => {
-      document.querySelectorAll('.karat-pill').forEach(x => x.classList.remove('selected'));
-      p.classList.add('selected');
-      document.getElementById('karatVal').value = p.dataset.karat;
-    });
-  });
-
-  // نوع الذهب
-  document.querySelectorAll('.radio-btn').forEach(b => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.radio-btn').forEach(x => x.classList.remove('selected'));
-      b.classList.add('selected');
-      document.getElementById('goldTypeVal').value = b.dataset.gtype;
-    });
-  });
-
-  // حفظ
-  document.getElementById('saveBtn').addEventListener('click', async () => {
-    if (!currentUser || !currentType) return;
-    const isBuy   = currentType === 'buy';
-    const karat   = document.getElementById('karatVal').value;
-    const weight  = parseFloat(document.getElementById('weight').value);
-    const pay     = document.getElementById('payMethod').value;
-    const notes   = document.getElementById('notes').value.trim();
-    const product = document.getElementById('product').value;
-    const gtype   = document.getElementById('goldTypeVal').value;
-    const isHalf  = pay === 'نص كاش نص كارت';
-
-    if (!karat)               return toast('⚠️ اختر العيار', true);
-    if (isBuy && !gtype)      return toast('⚠️ اختر نوع الذهب', true);
-    if (!isBuy && !product)   return toast('⚠️ اختر اسم القطعة', true);
-    if (!weight || weight<=0) return toast('⚠️ أدخل الوزن', true);
-    if (!pay)                 return toast('⚠️ اختر طريقة الدفع', true);
-
-    let amount = 0, amountCash = 0, amountCard = 0;
-    if (isHalf) {
-      amountCash = parseFloat(document.getElementById('amountCash').value) || 0;
-      amountCard = parseFloat(document.getElementById('amountCard').value) || 0;
-      amount = amountCash + amountCard;
-      if (amount <= 0) return toast('⚠️ أدخل المبالغ', true);
-    } else {
-      amount = parseFloat(document.getElementById('amount').value) || 0;
-      if (amount <= 0) return toast('⚠️ أدخل المبلغ', true);
-    }
-
-    const btn = document.getElementById('saveBtn');
-    btn.disabled = true; btn.textContent = 'جاري الحفظ...';
-
-    try {
-      await addDoc(collection(db, 'transactions'), {
-        workerId:   currentUser.uid,
-        workerName: localStorage.getItem('gp_name') || '',
-        type:       currentType,
-        karat, weight, payMethod: pay, amount, notes,
-        product:    isBuy ? null : product,
-        goldType:   isBuy ? gtype : null,
-        amountCash: isHalf ? amountCash : null,
-        amountCard: isHalf ? amountCard : null,
-        createdAt:  serverTimestamp()
-      });
-      toast('✅ تم حفظ العملية');
-      resetForm();
-    } catch(e) {
-      toast('❌ ' + e.message, true);
-    } finally {
-      btn.disabled = false; btn.textContent = '✅ حفظ العملية';
-    }
-  });
-
-  function resetForm() {
-    ['product','karatVal','goldTypeVal','weight','payMethod',
-     'amount','amountCash','amountCard','notes'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    document.querySelectorAll('.karat-pill,.radio-btn').forEach(x => x.classList.remove('selected'));
-    document.getElementById('halfFields').style.display  = 'none';
-    document.getElementById('amountField').style.display = 'block';
-    document.getElementById('mainForm').style.display    = 'none';
-    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-    currentType = null;
-  }
-
-  // سجل اليوم
-  function loadToday() {
-    const start = new Date(); start.setHours(0,0,0,0);
-    const end   = new Date(); end.setHours(23,59,59,999);
-    const q = query(
-      collection(db,'transactions'),
-      where('workerId','==', currentUser.uid),
-      where('createdAt','>=', Timestamp.fromDate(start)),
-      where('createdAt','<=', Timestamp.fromDate(end)),
-      orderBy('createdAt','desc')
-    );
+  // تحميل كل العمليات
+  function loadAll() {
+    const q = query(collection(db,'transactions'), orderBy('createdAt','desc'));
     onSnapshot(q, snap => {
-      const list = document.getElementById('historyList');
-      list.innerHTML = '';
-      document.getElementById('historySection').style.display = snap.empty ? 'none' : 'block';
-      snap.forEach(d => {
-        const t = d.data();
-        const isSell = t.type === 'sell';
-        const time = t.createdAt?.toDate().toLocaleTimeString('ar-SA',
-          {hour:'2-digit', minute:'2-digit'}) || '';
-        const el = document.createElement('div');
-        el.className = 'tx-card';
-        el.innerHTML = `
-          <div class="tx-top">
-            <span class="${isSell?'tx-sell':'tx-buy'}">${isSell?'📤 بيع':'📥 شراء'}</span>
-            <span style="color:#888;font-size:12px;">${time}</span>
-          </div>
-          <div class="tx-detail">
-            ${isSell ? 'القطعة: '+t.product : 'نوع: '+t.goldType} |
-            العيار: ${t.karat} | الوزن: ${t.weight}جم<br>
-            الدفع: ${t.payMethod}
-            ${t.notes ? ' | '+t.notes : ''}
-          </div>
-          <div class="tx-amount">${(t.amount||0).toLocaleString('ar-SA')} ﷼</div>
-        `;
-        list.appendChild(el);
-      });
+      allTx = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('lastUpdate').textContent =
+        'آخر تحديث: ' + new Date().toLocaleTimeString('ar-SA',
+          {hour:'2-digit', minute:'2-digit'});
+      updateStats(allTx);
+      updateCharts(allTx);
+      populateWorkers(allTx);
+      applyFilters();
     });
   }
 
-  function toast(msg, err=false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = err ? 'show error' : 'show';
-    setTimeout(() => { t.className = ''; }, 3000);
+  // إجماليات
+  function updateStats(data) {
+    const sells      = data.filter(t => t.type==='sell');
+    const buys       = data.filter(t => t.type==='buy');
+    const totalSell  = sells.reduce((a,t) => a+(t.amount||0), 0);
+    const totalBuy   = buys.reduce((a,t)  => a+(t.amount||0), 0);
+    const net        = totalSell - totalBuy;
+    const totalW     = data.reduce((a,t)  => a+(t.weight||0), 0);
+    const workers    = new Set(data.map(t => t.workerId)).size;
+
+    document.getElementById('st-sell').textContent   = totalSell.toLocaleString('ar-SA') + ' ﷼';
+    document.getElementById('st-buy').textContent    = totalBuy.toLocaleString('ar-SA')  + ' ﷼';
+    const netEl = document.getElementById('st-net');
+    netEl.textContent   = (net>=0?'+':'') + net.toLocaleString('ar-SA') + ' ﷼';
+    netEl.style.color   = net>=0 ? '#2ed573' : '#ff4757';
+    document.getElementById('st-weight').textContent = totalW.toFixed(2) + ' جم';
+    document.getElementById('st-count').textContent  = data.length;
+    document.getElementById('st-workers').textContent = workers;
+  }
+
+  // رسوم بيانية
+  function updateCharts(data) {
+    // يومي
+    const byDay = {};
+    data.forEach(t => {
+      if (!t.createdAt) return;
+      const d = t.createdAt.toDate().toLocaleDateString('ar-SA-u-nu-latn');
+      if (!byDay[d]) byDay[d] = {sell:0, buy:0};
+      if (t.type==='sell') byDay[d].sell += t.amount||0;
+      else byDay[d].buy += t.amount||0;
+    });
+    const days = Object.keys(byDay).slice(0,14).reverse();
+    draw('chartDaily','bar',{
+      labels: days,
+      datasets:[
+        {label:'بيع', data:days.map(d=>byDay[d].sell), backgroundColor:'rgba(46,213,115,0.7)'},
+        {label:'شراء', data:days.map(d=>byDay[d].buy), backgroundColor:'rgba(255,71,87,0.7)'}
+      ]
+    });
+
+    // طرق الدفع
+    const byPay = {};
+    data.forEach(t => { byPay[t.payMethod]=(byPay[t.payMethod]||0)+1; });
+    draw('chartPay','doughnut',{
+      labels: Object.keys(byPay),
+      datasets:[{ data:Object.values(byPay),
+        backgroundColor:['#d4af37','#2ed573','#a29bfe','#ff6b6b','#74b9ff'] }]
+    });
+
+    // العيارات
+    const byK = {};
+    data.forEach(t => { byK[t.karat]=(byK[t.karat]||0)+1; });
+    draw('chartKarat','pie',{
+      labels: Object.keys(byK),
+      datasets:[{ data:Object.values(byK),
+        backgroundColor:['#d4af37','#74b9ff','#fd79a8'] }]
+    });
+
+    // العمال
+    const byW = {};
+    data.forEach(t => { byW[t.workerName]=(byW[t.workerName]||0)+(t.amount||0); });
+    draw('chartWorker','bar',{
+      labels: Object.keys(byW),
+      datasets:[{ label:'إجمالي ﷼', data:Object.values(byW), backgroundColor:'#a29bfe' }]
+    });
+  }
+
+  function draw(id, type, data) {
+    const ctx = document.getElementById(id).getContext('2d');
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(ctx, {
+      type, data,
+      options:{
+        responsive:true,
+        plugins:{ legend:{ labels:{ color:'#ccc', font:{size:11} } } },
+        scales: type==='bar' ? {
+          x:{ ticks:{color:'#aaa'}, grid:{color:'rgba(255,255,255,0.05)'} },
+          y:{ ticks:{color:'#aaa'}, grid:{color:'rgba(255,255,255,0.05)'} }
+        } : {}
+      }
+    });
+  }
+
+  // قائمة العمال في الفلتر
+  function populateWorkers(data) {
+    const sel = document.getElementById('f-worker');
+    const cur = sel.value;
+    const map = {};
+    data.forEach(t => { map[t.workerId]=t.workerName; });
+    sel.innerHTML = '<option value="">كل العمال</option>';
+    Object.entries(map).forEach(([id,name]) => {
+      const o=document.createElement('option');
+      o.value=id; o.textContent=name;
+      if(id===cur) o.selected=true;
+      sel.appendChild(o);
+    });
+  }
+
+  // فلترة
+  ['f-worker','f-type','f-karat','f-product','f-pay','f-from','f-to'].forEach(id => {
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+  document.getElementById('resetFilters').addEventListener('click', () => {
+    ['f-worker','f-type','f-karat','f-product','f-pay','f-from','f-to']
+      .forEach(id => { document.getElementById(id).value=''; });
+    applyFilters();
+  });
+
+  function applyFilters() {
+    const fw  = document.getElementById('f-worker').value;
+    const ft  = document.getElementById('f-type').value;
+    const fk  = document.getElementById('f-karat').value;
+    const fp  = document.getElementById('f-product').value;
+    const fpm = document.getElementById('f-pay').value;
+    const fd1 = document.getElementById('f-from').value;
+    const fd2 = document.getElementById('f-to').value;
+
+    const filtered = allTx.filter(t => {
+      if (fw  && t.workerId  !== fw)  return false;
+      if (ft  && t.type      !== ft)  return false;
+      if (fk  && t.karat     !== fk)  return false;
+      if (fp  && t.product   !== fp)  return false;
+      if (fpm && t.payMethod !== fpm) return false;
+      if (fd1 || fd2) {
+        const d = t.createdAt?.toDate();
+        if (!d) return false;
+        const ds = d.toISOString().slice(0,10);
+        if (fd1 && ds < fd1) return false;
+        if (fd2 && ds > fd2) return false;
+      }
+      return true;
+    });
+    renderTx(filtered);
+  }
+
+  function renderTx(data) {
+    const list  = document.getElementById('txList');
+    const noRes = document.getElementById('noResults');
+    document.getElementById('txCount').textContent = `العمليات (${data.length})`;
+    list.innerHTML = '';
+    if (data.length===0) { noRes.style.display='block'; return; }
+    noRes.style.display='none';
+    data.forEach(t => {
+      const isSell = t.type==='sell';
+      const dt = t.createdAt?.toDate();
+      const dtStr = dt ? dt.toLocaleString('ar-SA-u-nu-latn',{
+        year:'numeric', month:'short', day:'numeric',
+        hour:'2-digit', minute:'2-digit'
+      }) : '—';
+      const el = document.createElement('div');
+      el.className='tx-card';
+      el.innerHTML=`
+        <div class="tx-top">
+          <span class="${isSell?'tx-sell':'tx-buy'}">${isSell?'📤 بيع':'📥 شراء'}</span>
+          <span class="badge">${t.karat} عيار</span>
+        </div>
+        <div class="tx-worker">👤 ${t.workerName||'—'}</div>
+        <div class="tx-detail">
+          ${isSell?'القطعة: '+t.product:'نوع الذهب: '+t.goldType} |
+          الوزن: ${t.weight}جم | الدفع: ${t.payMethod}
+          ${t.notes?'<br>📝 '+t.notes:''}
+          <br>🕐 ${dtStr}
+        </div>
+        <div class="tx-amount">${(t.amount||0).toLocaleString('ar-SA')} ﷼</div>
+      `;
+      list.appendChild(el);
+    });
   }
 </script>
 </body>
