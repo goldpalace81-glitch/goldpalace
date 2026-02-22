@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>قصر الذهب — العامل</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      color: #fff;
+      padding: 20px 16px 80px;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    header h1 { color: #d4af37; font-size: 20px; }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #d4af37;
+      color: #d4af37;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .type-btns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      margin-bottom: 28px;
+    }
+    .type-btn {
+      padding: 22px 10px;
+      border-radius: 14px;
+      border: 2px solid transparent;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .type-btn.sell {
+      background: rgba(46,213,115,0.1);
+      border-color: rgba(46,213,115,0.4);
+      color: #2ed573;
+    }
+    .type-btn.buy {
+      background: rgba(255,71,87,0.1);
+      border-color: rgba(255,71,87,0.4);
+      color: #ff4757;
+    }
+    .type-btn.selected {
+      transform: scale(1.04);
+      box-shadow: 0 0 24px rgba(212,175,55,0.4);
+      border-color: #d4af37 !important;
+      color: #d4af37 !important;
+    }
+    .form-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    .field { margin-bottom: 20px; }
+    label {
+      display: block;
+      color: #d4af37;
+      font-size: 13px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    select, input[type="number"], input[type="text"], textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border 0.3s;
+      -webkit-appearance: none;
+    }
+    select:focus, input:focus, textarea:focus { border-color: #d4af37; }
+    option { background: #24243e; color: #fff; }
+    .karat-group { display: flex; gap: 10px; }
+    .karat-pill {
+      flex: 1;
+      padding: 11px 0;
+      border-radius: 10px;
+      border: 2px solid rgba(212,175,55,0.3);
+      background: rgba(255,255,255,0.05);
+      color: #aaa;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .karat-pill.selected {
+      background: linear-gradient(135deg, #d4af37, #b8972e);
+      color: #1a1200;
+      border-color: #d4af37;
+      box-shadow: 0 0 14px rgba(212,175,55,0.5);
+    }
+    .radio-group { display: flex; gap: 10px; }
+    .radio-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 10px;
+      border: 2px solid rgba(212,175,55,0.3);
+      background: rgba(255,255,255,0.05);
+      color: #aaa;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .radio-btn.selected {
+      background: rgba(212,175,55,0.2);
+      border-color: #d4af37;
+      color: #d4af37;
+    }
+    .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    textarea { resize: none; min-height: 80px; }
+    .datetime-badge {
+      background: rgba(212,175,55,0.08);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #d4af37;
+      text-align: center;
+    }
+    .save-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #d4af37, #b8972e);
+      color: #1a1200;
+      font-size: 17px;
+      font-weight: bold;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    .save-btn:hover { opacity: 0.88; }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #2ed573; color: #000; padding: 12px 28px;
+      border-radius: 30px; font-weight: bold; font-size: 14px;
+      opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 999;
+    }
+    #toast.show { opacity: 1; }
+    #toast.error { background: #ff4757; color: #fff; }
+    .history-title { color: #d4af37; font-size: 16px; font-weight: bold; margin: 28px 0 14px; }
+    .tx-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.12);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .tx-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .tx-sell { color: #2ed573; font-weight: bold; }
+    .tx-buy { color: #ff4757; font-weight: bold; }
+    .tx-detail { color: #bbb; font-size: 13px; line-height: 1.8; }
+    .tx-amount { color: #d4af37; font-weight: bold; font-size: 15px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🏅 قصر الذهب</h1>
+    <span style="color:#aaa;font-size:13px;" id="workerNameHeader"></span>
+  </div>
+  <button class="logout-btn" id="logoutBtn">خروج</button>
+</header>
+
+<div class="type-btns">
+  <button class="type-btn sell" data-type="sell">📤 بيع</button>
+  <button class="type-btn buy"  data-type="buy">📥 شراء</button>
+</div>
+
+<div class="form-card" id="mainForm" style="display:none;">
+
+  <div class="field">
+    <label>📅 التاريخ والوقت</label>
+    <div class="datetime-badge" id="datetimeDisplay"></div>
+  </div>
+
+  <div class="field" id="productField">
+    <label>💍 اسم القطعة</label>
+    <select id="product">
+      <option value="">— اختر —</option>
+      <option>سبحة</option><option>خاتم</option><option>إسوارة</option>
+      <option>طقم</option><option>نص طقم</option><option>حلق</option>
+      <option>دبلة</option><option>عقد</option><option>شوكر</option>
+      <option>خلخال</option><option>كف</option><option>حزام</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>⚖️ العيار</label>
+    <div class="karat-group">
+      <div class="karat-pill" data-karat="18">18</div>
+      <div class="karat-pill" data-karat="21">21</div>
+      <div class="karat-pill" data-karat="18&21">18&21</div>
+    </div>
+    <input type="hidden" id="karatVal"/>
+  </div>
+
+  <div class="field" id="goldTypeField" style="display:none;">
+    <label>🔸 نوع الذهب <span style="color:#ff4757;font-size:11px;">(مطلوب)</span></label>
+    <div class="radio-group">
+      <div class="radio-btn" data-gtype="ذهب صافٍ">ذهب صافٍ</div>
+      <div class="radio-btn" data-gtype="ذهب بفصوص">بفصوص</div>
+    </div>
+    <input type="hidden" id="goldTypeVal"/>
+  </div>
+
+  <div class="field">
+    <label>⚖️ الوزن (جرام)</label>
+    <input type="number" id="weight" placeholder="0.00" step="0.01" min="0"/>
+  </div>
+
+  <div class="field">
+    <label>💳 طريقة الدفع</label>
+    <select id="payMethod">
+      <option value="">— اختر —</option>
+    </select>
+  </div>
+
+  <div class="field" id="amountField">
+    <label>💰 المبلغ (﷼)</label>
+    <input type="number" id="amount" placeholder="0" min="0"/>
+  </div>
+
+  <div class="half-grid" id="halfFields" style="display:none;">
+    <div>
+      <label>💵 نقدي (﷼)</label>
+      <input type="number" id="amountCash" placeholder="0" min="0"/>
+    </div>
+    <div>
+      <label>💳 كارت (﷼)</label>
+      <input type="number" id="amountCard" placeholder="0" min="0"/>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>📝 ملاحظة <span style="color:#888;font-size:11px;">(اختياري)</span></label>
+    <textarea id="notes" placeholder="أي ملاحظة إضافية..."></textarea>
+  </div>
+
+  <button class="save-btn" id="saveBtn">✅ حفظ العملية</button>
+</div>
+
+<div id="historySection" style="display:none;">
+  <div class="history-title">📋 عمليات اليوم</div>
+  <div id="historyList"></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { auth, db } from './firebase.js';
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import {
+    collection, addDoc, query, where, orderBy,
+    onSnapshot, serverTimestamp, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  let currentUser = null;
+  let currentType = null;
+
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    document.getElementById('workerNameHeader').textContent =
+      'مرحباً، ' + (localStorage.getItem('gp_name') || '');
+    loadToday();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = 'index.html';
+  });
+
+  // ساعة
+  function tick() {
+    const now = new Date();
+    document.getElementById('datetimeDisplay').textContent =
+      now.toLocaleDateString('ar-SA-u-nu-latn', {
+        weekday:'long', year:'numeric', month:'long', day:'numeric',
+        hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Riyadh'
+      });
+  }
+  setInterval(tick, 1000); tick();
+
+  // اختيار بيع/شراء
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentType = btn.dataset.type;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('mainForm').style.display = 'block';
+      buildForm(currentType);
+    });
+  });
+
+  function buildForm(type) {
+    const isBuy = type === 'buy';
+    document.getElementById('productField').style.display  = isBuy ? 'none'  : 'block';
+    document.getElementById('goldTypeField').style.display = isBuy ? 'block' : 'none';
+    const pm = document.getElementById('payMethod');
+    pm.innerHTML = '<option value="">— اختر —</option>';
+    const methods = isBuy
+      ? ['كاش', 'تحويل']
+      : ['كاش', 'تحويل', 'بطاقة', 'تابي', 'نص كاش نص كارت'];
+    methods.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m; pm.appendChild(o);
+    });
+    refreshPayFields();
+  }
+
+  function refreshPayFields() {
+    const isHalf = document.getElementById('payMethod').value === 'نص كاش نص كارت';
+    document.getElementById('amountField').style.display = isHalf ? 'none'  : 'block';
+    document.getElementById('halfFields').style.display  = isHalf ? 'grid'  : 'none';
+  }
+  document.getElementById('payMethod').addEventListener('change', refreshPayFields);
+
+  // العيارات
+  document.querySelectorAll('.karat-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.karat-pill').forEach(x => x.classList.remove('selected'));
+      p.classList.add('selected');
+      document.getElementById('karatVal').value = p.dataset.karat;
+    });
+  });
+
+  // نوع الذهب
+  document.querySelectorAll('.radio-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.radio-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      document.getElementById('goldTypeVal').value = b.dataset.gtype;
+    });
+  });
+
+  // حفظ
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    if (!currentUser || !currentType) return;
+    const isBuy   = currentType === 'buy';
+    const karat   = document.getElementById('karatVal').value;
+    const weight  = parseFloat(document.getElementById('weight').value);
+    const pay     = document.getElementById('payMethod').value;
+    const notes   = document.getElementById('notes').value.trim();
+    const product = document.getElementById('product').value;
+    const gtype   = document.getElementById('goldTypeVal').value;
+    const isHalf  = pay === 'نص كاش نص كارت';
+
+    if (!karat)               return toast('⚠️ اختر العيار', true);
+    if (isBuy && !gtype)      return toast('⚠️ اختر نوع الذهب', true);
+    if (!isBuy && !product)   return toast('⚠️ اختر اسم القطعة', true);
+    if (!weight || weight<=0) return toast('⚠️ أدخل الوزن', true);
+    if (!pay)                 return toast('⚠️ اختر طريقة الدفع', true);
+
+    let amount = 0, amountCash = 0, amountCard = 0;
+    if (isHalf) {
+      amountCash = parseFloat(document.getElementById('amountCash').value) || 0;
+      amountCard = parseFloat(document.getElementById('amountCard').value) || 0;
+      amount = amountCash + amountCard;
+      if (amount <= 0) return toast('⚠️ أدخل المبالغ', true);
+    } else {
+      amount = parseFloat(document.getElementById('amount').value) || 0;
+      if (amount <= 0) return toast('⚠️ أدخل المبلغ', true);
+    }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+    try {
+      await addDoc(collection(db, 'transactions'), {
+        workerId:   currentUser.uid,
+        workerName: localStorage.getItem('gp_name') || '',
+        type:       currentType,
+        karat, weight, payMethod: pay, amount, notes,
+        product:    isBuy ? null : product,
+        goldType:   isBuy ? gtype : null,
+        amountCash: isHalf ? amountCash : null,
+        amountCard: isHalf ? amountCard : null,
+        createdAt:  serverTimestamp()
+      });
+      toast('✅ تم حفظ العملية');
+      resetForm();
+    } catch(e) {
+      toast('❌ ' + e.message, true);
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ حفظ العملية';
+    }
+  });
+
+  function resetForm() {
+    ['product','karatVal','goldTypeVal','weight','payMethod',
+     'amount','amountCash','amountCard','notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.querySelectorAll('.karat-pill,.radio-btn').forEach(x => x.classList.remove('selected'));
+    document.getElementById('halfFields').style.display  = 'none';
+    document.getElementById('amountField').style.display = 'block';
+    document.getElementById('mainForm').style.display    = 'none';
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+    currentType = null;
+  }
+
+  // سجل اليوم
+  function loadToday() {
+    const start = new Date(); start.setHours(0,0,0,0);
+    const end   = new Date(); end.setHours(23,59,59,999);
+    const q = query(
+      collection(db,'transactions'),
+      where('workerId','==', currentUser.uid),
+      where('createdAt','>=', Timestamp.fromDate(start)),
+      where('createdAt','<=', Timestamp.fromDate(end)),
+      orderBy('createdAt','desc')
+    );
+    onSnapshot(q, snap => {
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+      document.getElementById('historySection').style.display = snap.empty ? 'none' : 'block';
+      snap.forEach(d => {
+        const t = d.data();
+        const isSell = t.type === 'sell';
+        const time = t.createdAt?.toDate().toLocaleTimeString('ar-SA',
+          {hour:'2-digit', minute:'2-digit'}) || '';
+        const el = document.createElement('div');
+        el.className = 'tx-card';
+        el.innerHTML = `
+          <div class="tx-top">
+            <span class="${isSell?'tx-sell':'tx-buy'}">${isSell?'📤 بيع':'📥 شراء'}</span>
+            <span style="color:#888;font-size:12px;">${time}</span>
+          </div>
+          <div class="tx-detail">
+            ${isSell ? 'القطعة: '+t.product : 'نوع: '+t.goldType} |
+            العيار: ${t.karat} | الوزن: ${t.weight}جم<br>
+            الدفع: ${t.payMethod}
+            ${t.notes ? ' | '+t.notes : ''}
+          </div>
+          <div class="tx-amount">${(t.amount||0).toLocaleString('ar-SA')} ﷼</div>
+        `;
+        list.appendChild(el);
+      });
+    });
+  }
+
+  function toast(msg, err=false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = err ? 'show error' : 'show';
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+</script>
+</body>
+</html>
