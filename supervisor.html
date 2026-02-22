@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>قصر الذهب — المشرف</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      color: #fff;
+      padding: 20px 16px 80px;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    h1 { color: #d4af37; font-size: 20px; }
+    .logout-btn {
+      background: transparent; border: 1px solid #d4af37;
+      color: #d4af37; padding: 6px 14px; border-radius: 8px;
+      cursor: pointer; font-size: 13px;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      flex: 1; padding: 10px; border-radius: 10px;
+      border: 1px solid rgba(212,175,55,0.3);
+      background: rgba(255,255,255,0.04);
+      color: #ccc; font-size: 14px; cursor: pointer; text-align: center;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: rgba(212,175,55,0.2);
+      border-color: #d4af37; color: #d4af37;
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(2,1fr);
+      gap: 12px; margin-bottom: 20px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px; padding: 16px; text-align: center;
+    }
+    .stat-card .val { font-size: 18px; font-weight: bold; color: #d4af37; }
+    .stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 4px; }
+    .chart-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    }
+    .chart-card h3 { color: #d4af37; font-size: 13px; margin-bottom: 12px; }
+    .filters {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px; padding: 18px; margin-bottom: 20px;
+    }
+    .filters h3 { color: #d4af37; font-size: 14px; margin-bottom: 14px; }
+    .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .filter-grid select, .filter-grid input {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 8px; color: #fff;
+      padding: 9px 12px; font-size: 13px; width: 100%; outline: none;
+    }
+    option { background: #24243e; }
+    .filter-full { grid-column: 1 / -1; }
+    .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .date-range label { font-size: 11px; color: #aaa; margin-bottom: 4px; display: block; }
+    .reset-btn {
+      width: 100%; background: transparent;
+      border: 1px solid rgba(212,175,55,0.4);
+      color: #d4af37; padding: 9px; border-radius: 8px;
+      cursor: pointer; font-size: 13px; margin-top: 4px;
+    }
+    .tx-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.12);
+      border-radius: 12px; padding: 14px; margin-bottom: 10px;
+    }
+    .tx-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .tx-sell { color: #2ed573; font-weight: bold; }
+    .tx-buy  { color: #ff4757; font-weight: bold; }
+    .tx-detail { color: #bbb; font-size: 12px; line-height: 1.8; }
+    .tx-amount { color: #d4af37; font-weight: bold; margin-top: 4px; }
+    .tx-worker { color: #a29bfe; font-size: 12px; margin-bottom: 4px; }
+    .badge {
+      background: rgba(212,175,55,0.15);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 6px; font-size: 11px;
+      padding: 2px 8px; color: #d4af37;
+    }
+    #noResults {
+      color: #888; text-align: center;
+      padding: 30px; display: none;
+    }
+    .section-title {
+      color: #d4af37; font-size: 15px;
+      font-weight: bold; margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 لوحة المشرف</h1>
+    <span style="color:#aaa;font-size:11px;" id="lastUpdate"></span>
+  </div>
+  <button class="logout-btn" id="logoutBtn">خروج</button>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview">📈 نظرة عامة</div>
+  <div class="tab" data-tab="transactions">📋 العمليات</div>
+</div>
+
+<!-- نظرة عامة -->
+<div id=
